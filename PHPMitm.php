@@ -88,7 +88,7 @@ class PHPMitm {
     }
 
     /**
-     * Set's the default gateway (optionally).
+     * Set's the default gateway (optional).
      *
      * @param string $gw
      */
@@ -182,6 +182,29 @@ class PHPMitm {
         return trim($input);
     }
 
+    /**
+     * Randomize NIC (optional).
+     * 
+     */
+    public function randomize_nic() {   
+	exec("iwconfig 2> /dev/null", $wlan_arr);
+        if (count($wlan_arr) > 0) {
+            echo "WARNING: your network interface card's mac address is not being changed because you're on wifi.\n";
+        } else {
+            # Blame it on an Apple computer.
+            $hw = array('00:1c:b3','00:1e:c2','00:1f:5b','00:1f:f3','00:21:e9','00:22:41','00:23:12','00:23:32','00:23:6c','00:23:df',
+                '00:24:36','00:25:00','00:25:4b','00:25:bc','00:26:08','00:26:4a','00:26:b0','00:26:bb','04:0c:ce','04:1e:64',
+                '10:93:e9','14:5a:05','24:ab:81','28:e7:cf','34:15:9e','40:30:04','40:d3:2d','44:2a:60','58:1f:aa','58:b0:35',
+                '60:fb:42','64:b9:e8','7c:6d:62','8c:58:77','90:84:0d','98:03:d8','a4:b1:97','a4:d1:d2','d4:9a:20','d8:30:62','d8:9e:3f','f8:1e:df');
+            
+            $mac_chars = array_merge(range(0, 9), range('a', 'f'));
+            
+            $mac_address_prefix = array_rand($hw, 1) . ':' . array_rand($mac_chars, 4) . ':' . array_rand($mac_chars, 4);
+            system('ifconfig ' . self::get_NetworkInterface() . ' down hw ether ' . $mac_address_prefix);
+            system('ifconfig ' . self::get_NetworkInterface() . ' up');
+	
+        }
+    
 
     public function initial_attack_prep() {
         if ($this->_nmap_decides) {
@@ -223,14 +246,6 @@ class PHPMitm {
                 throw new PHPMitm_Exception('invalid target machine IP address: ' . self::get_TargetMachine() . "\n\n");
             }
         }
-
-
-        /**
-         * Randomize nic if possible
-         * 
-         */
-	# Add code here        
-
 
 
         # Enable packet forwarding on your attacking machine

